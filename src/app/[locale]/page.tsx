@@ -7,7 +7,8 @@ import { RecipeCard } from '@/components/RecipeCard';
 import { SearchFilters } from '@/components/SearchFilters';
 import { isSupportedLocale, t } from '@/i18n/locales';
 
-export const revalidate = 300;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 const PAGE_SIZE = 24;
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
