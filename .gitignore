@@ -6,3 +6,6 @@ data/*.db
 data/*.db-*
 public/uploads/*
 !public/uploads/.gitkeep
+data
+prisma/data
+public/uploads/recipes
