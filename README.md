@@ -169,3 +169,32 @@ Payload shape:
 The current setup is optimized for a small self-hosted VPS: indexed SQLite tables, compact server-rendered pages, lazy images and revalidation after updates. This minimizes queries and is enough for a typical content site.
 
 No SQLite VPS setup can literally handle unlimited load. If traffic becomes very high, the architecture can be scaled without changing the app API by moving Prisma from SQLite to PostgreSQL, putting uploaded images on S3/R2, enabling Cloudflare cache rules for public pages/assets and adding a search engine such as Meilisearch for full-text search.
+
+## PM2 on the VPS
+
+For the current server setup, run only one PM2 process for this site under the `dishkin` user:
+
+```bash
+cd /home/dishkin/htdocs/dishkin.com
+pm2 delete dishkin-web || true
+PORT=3000 pm2 start npm --name dishkin-web --cwd /home/dishkin/htdocs/dishkin.com -- start
+pm2 save
+pm2 status
+curl -I http://127.0.0.1:3000/en
+```
+
+If `pm2 status` shows two `dishkin-web` rows, delete and recreate the process as shown above. Two copies on the same port cause `EADDRINUSE: address already in use 0.0.0.0:3000`.
+
+To enable reboot autostart without affecting `evsi.store`, create a separate PM2 service for the `dishkin` user only:
+
+```bash
+/home/dishkin/.nvm/versions/node/v22.23.1/lib/node_modules/pm2/bin/pm2 startup systemd -u dishkin --hp /home/dishkin
+su - dishkin -c "/home/dishkin/.nvm/versions/node/v22.23.1/bin/pm2 save"
+systemctl status pm2-dishkin
+```
+
+You should then have two independent services: `pm2-evsi.service` and `pm2-dishkin.service`.
+
+## Notes about this fixed archive
+
+This archive removes server-side user-agent detection from `src/app/[locale]/layout.tsx`. The Android/iOS install banner is now detected on the client in `src/components/StoreInstallBanner.tsx`, which avoids the `DYNAMIC_SERVER_USAGE` production error on `/en`.
