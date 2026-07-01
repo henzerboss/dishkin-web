@@ -1,0 +1,39 @@
+{
+  "name": "dishkin-web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "NODE_ENV=production node server.js",
+    "lint": "next lint",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:dev": "prisma migrate dev"
+  },
+  "dependencies": {
+    "@next/third-parties": "^15.4.4",
+    "@prisma/client": "^6.12.0",
+    "bcryptjs": "^3.0.2",
+    "clsx": "^2.1.1",
+    "dotenv": "^17.2.1",
+    "lucide-react": "^0.532.0",
+    "next": "^15.4.8",
+    "next-auth": "^5.0.0-beta.29",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.4.4",
+    "prisma": "^6.12.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
