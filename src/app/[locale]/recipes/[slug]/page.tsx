@@ -7,15 +7,36 @@ import prisma from '@/lib/prisma';
 import { SITE_URL } from '@/lib/config';
 import { interpolate, isSupportedLocale, t } from '@/i18n/locales';
 import { difficultyKey, recipeIngredients, recipeNutrition, recipeSteps } from '@/lib/recipe';
+import { categoryUrl, recipeUrl } from '@/lib/url';
 
-export const revalidate = 600;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+function decodeHandle(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+async function findRecipe(locale: string, handle: string) {
+  const decoded = decodeHandle(handle);
+  return prisma.recipe.findFirst({
+    where: {
+      locale,
+      OR: [{ id: decoded }, { slug: decoded }, { slug: handle }],
+    },
+    include: { categories: true },
+  });
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Metadata> {
   const { locale, slug } = await params;
-  const recipe = await prisma.recipe.findFirst({ where: { locale, slug }, include: { categories: true } });
+  const recipe = await findRecipe(locale, slug);
   if (!recipe) return {};
   const description = recipe.description || `${recipe.title} — ${t(locale, 'siteDescription')}`;
-  const url = `${SITE_URL}/${locale}/recipes/${recipe.slug}`;
+  const url = `${SITE_URL}${recipeUrl(locale, recipe.id)}`;
   return {
     title: `${recipe.title} | Dishkin`,
     description,
@@ -33,7 +54,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function RecipePage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
   const { locale, slug } = await params;
   if (!isSupportedLocale(locale)) notFound();
-  const recipe = await prisma.recipe.findFirst({ where: { locale, slug }, include: { categories: true } });
+  const recipe = await findRecipe(locale, slug);
   if (!recipe) notFound();
 
   const ingredients = recipeIngredients(recipe);
@@ -64,7 +85,7 @@ export default async function RecipePage({ params }: { params: Promise<{ locale:
         <div className="card sticky top-24 overflow-hidden">
           <div className="relative h-[340px] bg-gradient-to-br from-orange-100 to-emerald-50">
             {recipe.photoUrl ? (
-              <Image src={recipe.photoUrl} alt={recipe.title} fill priority sizes="(max-width: 980px) 100vw, 44vw" className="object-cover" />
+              <Image src={recipe.photoUrl} alt={recipe.title} fill priority sizes="(max-width: 980px) 100vw, 44vw" className="object-cover" unoptimized />
             ) : (
               <div className="flex h-full items-center justify-center text-[var(--primary)]"><ChefHat size={72} /></div>
             )}
@@ -79,7 +100,7 @@ export default async function RecipePage({ params }: { params: Promise<{ locale:
 
         <div>
           <div className="mb-4 flex flex-wrap gap-2">
-            {recipe.categories.map((c) => <Link key={c.id} href={`/${locale}?category=${encodeURIComponent(c.name)}`} className="badge">{c.name}</Link>)}
+            {recipe.categories.map((c) => <Link key={c.id} href={categoryUrl(locale, c.name)} className="badge">{c.name}</Link>)}
           </div>
           <h1 className="text-4xl font-black tracking-tight sm:text-5xl">{recipe.title}</h1>
           <p className="mt-4 text-[var(--muted)]">{recipe.type === 'verified' ? t(locale, 'traditional') : authenticity}{recipe.cuisine ? ` · ${recipe.cuisine}` : ''}</p>

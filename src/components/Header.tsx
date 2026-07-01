@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Languages, Shield } from 'lucide-react';
+import { Languages, Tags } from 'lucide-react';
 import { LANGUAGES, t } from '@/i18n/locales';
 
 interface Props {
@@ -9,16 +9,19 @@ interface Props {
 
 export function Header({ locale }: Props) {
   return (
-    <header className="sticky top-0 z-40 border-b border-white/70 bg-white/75 backdrop-blur-xl">
-      <div className="container flex h-16 items-center justify-between gap-4">
-        <Link href={`/${locale}`} className="flex items-center gap-3 font-black tracking-tight">
-          <Image src="/brand/icon.png" width={38} height={38} alt="Dishkin" className="rounded-xl" priority />
-          <span>Dishkin</span>
+    <header className="sticky top-0 z-40 border-b border-white/70 bg-white/85 backdrop-blur-xl">
+      <div className="container flex min-h-16 flex-wrap items-center justify-between gap-2 py-2 sm:flex-nowrap sm:gap-4">
+        <Link href={`/${locale}`} className="flex min-w-0 items-center gap-2 font-black tracking-tight sm:gap-3">
+          <Image src="/brand/icon.png" width={38} height={38} alt="Dishkin" className="h-9 w-9 shrink-0 rounded-xl sm:h-[38px] sm:w-[38px]" priority unoptimized />
+          <span className="truncate text-lg sm:text-base">Dishkin</span>
         </Link>
-        <nav className="flex items-center gap-2">
+        <nav className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:flex-none">
+          <Link href={`/${locale}/categories`} className="btn-soft min-h-10 px-3 text-sm">
+            <Tags size={16} /> <span className="hidden sm:inline">{t(locale, 'categories')}</span>
+          </Link>
           <details className="relative">
-            <summary className="btn-soft list-none text-sm">
-              <Languages size={16} /> {t(locale, 'language')}
+            <summary className="btn-soft min-h-10 list-none px-3 text-sm">
+              <Languages size={16} /> <span className="hidden sm:inline">{t(locale, 'language')}</span>
             </summary>
             <div className="absolute end-0 mt-2 grid max-h-[70vh] w-64 grid-cols-1 overflow-auto rounded-2xl border border-[var(--border)] bg-white p-2 shadow-2xl">
               {LANGUAGES.map((l) => (
@@ -28,7 +31,6 @@ export function Header({ locale }: Props) {
               ))}
             </div>
           </details>
-          <Link href="/admin" className="btn-soft hidden text-sm sm:inline-flex"><Shield size={16} /> {t(locale, 'admin')}</Link>
         </nav>
       </div>
     </header>

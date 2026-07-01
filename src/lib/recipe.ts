@@ -47,12 +47,22 @@ export function recipeCategories(recipe: Recipe & { categories?: { name: string 
   return [];
 }
 
+const CYRILLIC: Record<string, string> = {
+  а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya',
+  є: 'e', і: 'i', ї: 'yi', ґ: 'g',
+};
+
 export function slugify(input: string): string {
-  const cleaned = input
+  const transliterated = input
+    .toLowerCase()
+    .split('')
+    .map((char) => CYRILLIC[char] ?? char)
+    .join('');
+
+  const cleaned = transliterated
     .normalize('NFKD')
     .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9\p{L}]+/gu, '-')
+    .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 80);
   return cleaned || 'recipe';

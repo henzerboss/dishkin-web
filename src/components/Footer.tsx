@@ -9,7 +9,6 @@ export function Footer({ locale }: { locale: string }) {
         <p>© {new Date().getFullYear()} Dishkin. {t(locale, 'siteDescription')}</p>
         <div className="flex gap-4">
           <Link href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</Link>
-          <Link href="/admin">{t(locale, 'admin')}</Link>
         </div>
       </div>
     </footer>

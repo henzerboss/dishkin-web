@@ -30,33 +30,34 @@ export function StoreInstallBanner({ locale }: Props) {
 
     if (detectedPlatform === 'other') return;
 
-    const key = `dishkin-install-hidden-${detectedPlatform}`;
+    const key = `dishkin-store-banner-hidden-${detectedPlatform}`;
     setHidden(window.localStorage.getItem(key) === '1');
   }, []);
 
   if (platform === 'other' || hidden) return null;
 
   const url = platform === 'ios' ? APP_STORE_URL : GOOGLE_PLAY_URL;
+  const button = platform === 'ios' ? t(locale, 'openAppStore') : t(locale, 'openGooglePlay');
 
   const dismiss = () => {
-    window.localStorage.setItem(`dishkin-install-hidden-${platform}`, '1');
+    window.localStorage.setItem(`dishkin-store-banner-hidden-${platform}`, '1');
     setHidden(true);
   };
 
   return (
-    <div className="border-b border-orange-100 bg-white/90 backdrop-blur-xl">
-      <div className="container flex items-center gap-3 py-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--surface)] text-[var(--primary)]">
+    <div className="border-b border-orange-100 bg-white/95 backdrop-blur-xl">
+      <div className="container flex items-center gap-2 py-3 sm:gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--surface)] text-[var(--primary)] sm:h-11 sm:w-11">
           <Sparkles size={21} />
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="font-extrabold leading-tight">{t(locale, 'installTitle')}</p>
+          <p className="truncate font-extrabold leading-tight">{t(locale, 'installTitle')}</p>
           <p className="truncate text-sm text-[var(--muted)]">{t(locale, 'installBody')}</p>
         </div>
 
-        <a className="btn-primary px-4 py-2 text-sm" href={url} rel="noopener noreferrer">
-          {t(locale, 'installButton')}
+        <a className="btn-primary shrink-0 px-3 py-2 text-xs sm:px-4 sm:text-sm" href={url} target="_blank" rel="noopener noreferrer">
+          {button}
         </a>
 
         <button className="rounded-full p-2 text-[var(--muted)]" onClick={dismiss} aria-label="Close">

@@ -1,15 +1,20 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import { ChefHat, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { ChefHat, Sparkles, Tags } from 'lucide-react';
 import prisma from '@/lib/prisma';
 import { SITE_URL } from '@/lib/config';
 import { RecipeCard } from '@/components/RecipeCard';
 import { SearchFilters } from '@/components/SearchFilters';
+import { Pagination } from '@/components/Pagination';
+import { categoryEmoji } from '@/lib/categories';
+import { categoryUrl } from '@/lib/url';
 import { isSupportedLocale, t } from '@/i18n/locales';
+import { safePage } from '@/lib/url';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 20;
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -28,8 +33,8 @@ export default async function HomePage({ params, searchParams }: { params: Promi
   if (!isSupportedLocale(locale)) return null;
   const sp = await searchParams;
   const q = String(sp.q ?? '').trim();
-  const category = String(sp.category ?? '').trim();
   const sort = String(sp.sort ?? 'recent') === 'top' ? 'top' : 'recent';
+  const page = safePage(sp.page);
 
   const where = {
     locale,
@@ -39,7 +44,6 @@ export default async function HomePage({ params, searchParams }: { params: Promi
       { cuisine: { contains: q } },
       { description: { contains: q } },
     ] } : {}),
-    ...(category ? { categories: { some: { name: category } } } : {}),
   };
 
   const [recipes, categoryRows, total] = await Promise.all([
@@ -47,13 +51,14 @@ export default async function HomePage({ params, searchParams }: { params: Promi
       where,
       include: { categories: true },
       orderBy: sort === 'top' ? [{ rating: 'desc' }, { updatedAt: 'desc' }] : [{ updatedAt: 'desc' }],
+      skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
     prisma.recipeCategory.groupBy({ by: ['name'], where: { locale }, _count: { name: true }, orderBy: { _count: { name: 'desc' } }, take: 24 }),
     prisma.recipe.count({ where }),
   ]);
 
-  const categories = categoryRows.map((c) => ({ name: c.name, count: c._count.name }));
+  const categories = categoryRows.map((c) => ({ name: c.name, count: c._count.name, emoji: categoryEmoji(c.name) }));
 
   return (
     <div className="container pt-10 sm:pt-14">
@@ -63,29 +68,54 @@ export default async function HomePage({ params, searchParams }: { params: Promi
           <h1 className="mt-5 max-w-3xl text-4xl font-black tracking-tight sm:text-6xl">{t(locale, 'homeTitle')}</h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--muted)]">{t(locale, 'homeSubtitle')}</p>
           <div className="mt-7 flex flex-wrap gap-3 text-sm font-bold text-[var(--muted)]">
-            <span className="btn-soft">{total} {t(locale, 'allRecipes').toLowerCase()}</span>
-            <span className="btn-soft">{t(locale, 'categories')}: {categories.length}</span>
+            <span className="btn-soft">{total} {t(locale, 'recipesCount')}</span>
+            <Link className="btn-soft" href={`/${locale}/categories`}><Tags size={16} /> {t(locale, 'categories')}: {categories.length}</Link>
           </div>
         </div>
-        <div className="glass relative overflow-hidden rounded-[38px] p-6">
-          <div className="absolute -end-12 -top-10 h-44 w-44 rounded-full bg-orange-200/50 blur-2xl" />
-          <Image src="/brand/splash-icon.png" width={360} height={360} alt="Dishkin" className="relative mx-auto drop-shadow-2xl" priority />
+        <div className="relative overflow-hidden rounded-[38px] p-0">
+          <Image src="/brand/splash-icon.png" width={360} height={360} alt="Dishkin" className="relative mx-auto drop-shadow-2xl" priority unoptimized />
         </div>
       </section>
 
-      <SearchFilters locale={locale} q={q} category={category} sort={sort} categories={categories} />
+      <SearchFilters locale={locale} q={q} sort={sort} />
+
+      {categories.length ? (
+        <section className="mt-10">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-black">{t(locale, 'categoriesTitle')}</h2>
+              <p className="mt-1 text-sm text-[var(--muted)]">{t(locale, 'categoriesSubtitle')}</p>
+            </div>
+            <Link href={`/${locale}/categories`} className="btn-soft">{t(locale, 'viewAllCategories')}</Link>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {categories.slice(0, 8).map((c) => (
+              <Link key={c.name} href={categoryUrl(locale, c.name)} className="card flex items-center gap-3 p-4 transition hover:-translate-y-0.5 hover:shadow-2xl">
+                <span className="text-3xl" aria-hidden>{c.emoji}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-black">{c.name}</span>
+                  <span className="text-sm text-[var(--muted)]">{c.count} {t(locale, 'recipesCount')}</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="mt-10">
         <div className="mb-5 flex items-end justify-between gap-4">
           <div>
             <h2 className="text-2xl font-black">{t(locale, 'allRecipes')}</h2>
-            <p className="mt-1 text-sm text-[var(--muted)]">{total} results</p>
+            <p className="mt-1 text-sm text-[var(--muted)]">{total} {t(locale, 'results')}</p>
           </div>
         </div>
         {recipes.length ? (
-          <div className="recipe-grid">
-            {recipes.map((recipe) => <RecipeCard key={recipe.id} recipe={recipe} locale={locale} />)}
-          </div>
+          <>
+            <div className="recipe-grid">
+              {recipes.map((recipe) => <RecipeCard key={recipe.id} recipe={recipe} locale={locale} />)}
+            </div>
+            <Pagination locale={locale} page={page} pageSize={PAGE_SIZE} total={total} basePath={`/${locale}`} params={{ q, sort }} />
+          </>
         ) : (
           <div className="card flex flex-col items-center justify-center px-6 py-16 text-center">
             <ChefHat size={48} className="text-[var(--primary)]" />

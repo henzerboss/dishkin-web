@@ -5,6 +5,7 @@ import prisma from '@/lib/prisma';
 import { rateLimit } from '@/lib/rate-limit';
 import { saveRecipeImage, deletePublicFile } from '@/lib/uploads';
 import { buildSearchText, slugify } from '@/lib/recipe';
+import { recipeUrl } from '@/lib/url';
 import { isSupportedLocale } from '@/i18n/locales';
 
 export const runtime = 'nodejs';
@@ -162,6 +163,7 @@ export async function POST(req: NextRequest) {
   });
 
   revalidatePath(`/${locale}`);
+  revalidatePath(recipeUrl(locale, recipe.id));
   revalidatePath(`/${locale}/recipes/${recipe.slug}`);
-  return NextResponse.json({ ok: true, slug: recipe.slug, url: `/${locale}/recipes/${recipe.slug}` });
+  return NextResponse.json({ ok: true, slug: recipe.slug, url: recipeUrl(locale, recipe.id) });
 }

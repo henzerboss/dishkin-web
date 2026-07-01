@@ -198,3 +198,13 @@ You should then have two independent services: `pm2-evsi.service` and `pm2-dishk
 ## Notes about this fixed archive
 
 This archive removes server-side user-agent detection from `src/app/[locale]/layout.tsx`. The Android/iOS install banner is now detected on the client in `src/components/StoreInstallBanner.tsx`, which avoids the `DYNAMIC_SERVER_USAGE` production error on `/en`.
+
+
+## Update notes v3
+
+- The website no longer exposes a web app manifest, so Chrome should not install dishkin.com as a PWA copy. The mobile banner links directly to Google Play or the App Store. If an old PWA copy was already installed on a test device, remove it once manually from Android.
+- Recipe cards now link by app recipe id (`/{locale}/recipes/{id}`), while old slug URLs still resolve when possible.
+- Category SEO pages are available at `/{locale}/categories` and `/{locale}/categories/{category}`.
+- Recipe lists use 20 items per page with pagination.
+- Uploaded recipe images are rendered without the Next image optimizer to avoid `_next/image` 400 errors for locally uploaded files.
+- Admin links are hidden from the public header and footer; the admin panel remains available at `/admin`.

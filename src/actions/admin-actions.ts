@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import { deletePublicFile } from '@/lib/uploads';
+import { recipeUrl } from '@/lib/url';
 
 export async function deleteRecipeAction(formData: FormData) {
   const session = await auth();
@@ -20,5 +21,6 @@ export async function deleteRecipeAction(formData: FormData) {
   await deletePublicFile(recipe.photoUrl);
   revalidatePath(`/${recipe.locale}`);
   revalidatePath(`/${recipe.locale}/recipes/${recipe.slug}`);
+  revalidatePath(recipeUrl(recipe.locale, id));
   revalidatePath('/admin');
 }
