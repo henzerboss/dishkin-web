@@ -6,8 +6,11 @@ import { ArrowLeft, ChefHat, Clock, Gauge, Star, Users } from 'lucide-react';
 import prisma from '@/lib/prisma';
 import { SITE_URL } from '@/lib/config';
 import { interpolate, isSupportedLocale, t } from '@/i18n/locales';
-import { difficultyKey, recipeIngredients, recipeNutrition, recipeSteps } from '@/lib/recipe';
+import { difficultyKey, recipeIngredients, recipeSteps } from '@/lib/recipe';
 import { categoryUrl, recipeUrl } from '@/lib/url';
+import { RecipeCard } from '@/components/RecipeCard';
+import { findSimilarRecipes } from '@/lib/similar-recipes';
+import { buildRecipeJsonLd } from '@/lib/structured-data';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -59,23 +62,12 @@ export default async function RecipePage({ params }: { params: Promise<{ locale:
 
   const ingredients = recipeIngredients(recipe);
   const steps = recipeSteps(recipe);
-  const nutrition = recipeNutrition(recipe);
   const diff = difficultyKey(recipe.difficulty);
   const authenticity = interpolate(t(locale, 'authenticity'), { percent: recipe.authenticityPercent });
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Recipe',
-    name: recipe.title,
-    description: recipe.description ?? undefined,
-    image: recipe.photoUrl ? `${SITE_URL}${recipe.photoUrl}` : undefined,
-    recipeCuisine: recipe.cuisine ?? undefined,
-    recipeYield: String(recipe.servings),
-    totalTime: `PT${Math.max(1, recipe.timeMinutes)}M`,
-    recipeIngredient: ingredients.map((i) => `${i.amount ? `${i.amount} ` : ''}${i.name}`),
-    recipeInstructions: steps.map((s, idx) => ({ '@type': 'HowToStep', position: idx + 1, text: s.text })),
-    aggregateRating: recipe.rating ? { '@type': 'AggregateRating', ratingValue: recipe.rating, ratingCount: recipe.ratingCount || 1 } : undefined,
-    nutrition: nutrition ? { '@type': 'NutritionInformation', calories: nutrition.calories ? `${nutrition.calories} calories` : undefined, proteinContent: nutrition.protein ? `${nutrition.protein} g` : undefined, carbohydrateContent: nutrition.carbs ? `${nutrition.carbs} g` : undefined, fatContent: nutrition.fat ? `${nutrition.fat} g` : undefined } : undefined,
-  };
+  const [jsonLd, similarRecipes] = await Promise.all([
+    Promise.resolve(buildRecipeJsonLd(recipe, locale)),
+    findSimilarRecipes(recipe, 3),
+  ]);
 
   return (
     <div className="container pt-8 sm:pt-12">
@@ -131,6 +123,20 @@ export default async function RecipePage({ params }: { params: Promise<{ locale:
           </section>
         </div>
       </article>
+
+      {similarRecipes.length ? (
+        <section className="mt-12 sm:mt-16">
+          <div className="mb-5 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-black">{t(locale, 'similarRecipes')}</h2>
+              <p className="mt-1 text-sm text-[var(--muted)]">{t(locale, 'similarRecipesSubtitle')}</p>
+            </div>
+          </div>
+          <div className="recipe-grid">
+            {similarRecipes.map((item) => <RecipeCard key={item.id} recipe={item} locale={locale} />)}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

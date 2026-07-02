@@ -7,9 +7,12 @@ import { logoutAction } from '@/actions/auth-actions';
 import { deleteRecipeAction } from '@/actions/admin-actions';
 import prisma from '@/lib/prisma';
 import { LANGUAGES } from '@/i18n/locales';
+import { Pagination } from '@/components/Pagination';
+import { safePage } from '@/lib/url';
 import { ConfirmDeleteButton } from '@/components/ConfirmDeleteButton';
 
 export const dynamic = 'force-dynamic';
+const PAGE_SIZE = 50;
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const session = await auth();
@@ -17,6 +20,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const sp = await searchParams;
   const q = String(sp.q ?? '').trim();
   const locale = String(sp.locale ?? '').trim();
+  const page = safePage(sp.page);
   const where = {
     ...(locale ? { locale } : {}),
     ...(q ? { OR: [
@@ -26,7 +30,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     ] } : {}),
   };
   const [recipes, total] = await Promise.all([
-    prisma.recipe.findMany({ where, include: { categories: true }, orderBy: { updatedAt: 'desc' }, take: 80 }),
+    prisma.recipe.findMany({ where, include: { categories: true }, orderBy: { updatedAt: 'desc' }, skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE }),
     prisma.recipe.count({ where }),
   ]);
 
@@ -78,6 +82,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         ))}
         {!recipes.length ? <div className="card p-10 text-center text-[var(--muted)]">No recipes yet.</div> : null}
       </div>
+      <Pagination locale="en" page={page} pageSize={PAGE_SIZE} total={total} basePath="/admin" params={{ q, locale }} />
     </div>
   );
 }

@@ -33,7 +33,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
     if (!filePath) continue;
     try {
       const body = await readFile(filePath);
-      const arrayBuffer = body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength);
+      const arrayBuffer = new Uint8Array(body).buffer;
       return new NextResponse(arrayBuffer, {
         headers: {
           'Content-Type': contentType(filePath),

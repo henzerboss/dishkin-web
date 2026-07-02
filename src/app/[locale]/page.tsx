@@ -12,6 +12,7 @@ import { categoryEmoji } from '@/lib/categories';
 import { categoryUrl } from '@/lib/url';
 import { isSupportedLocale, t } from '@/i18n/locales';
 import { safePage } from '@/lib/url';
+import { buildRecipeItemListJsonLd } from '@/lib/structured-data';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -60,9 +61,11 @@ export default async function HomePage({ params, searchParams }: { params: Promi
   ]);
 
   const categories = categoryRows.map((c) => ({ name: c.name, count: c._count.name, emoji: categoryEmoji(c.name) }));
+  const itemListJsonLd = buildRecipeItemListJsonLd(locale, recipes, page, PAGE_SIZE);
 
   return (
     <div className="container pt-10 sm:pt-14">
+      {itemListJsonLd ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} /> : null}
       <section className="grid gap-8 lg:grid-cols-[1.12fr_.88fr] lg:items-center">
         <div>
           <span className="badge"><Sparkles size={15} /> Dishkin AI</span>

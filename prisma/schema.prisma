@@ -33,6 +33,7 @@ model Recipe {
   categories RecipeCategory[]
 
   @@index([locale, updatedAt])
+  @@index([updatedAt])
   @@index([locale, rating])
   @@index([locale, cuisine])
   @@index([locale, type])

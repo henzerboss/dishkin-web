@@ -10,6 +10,7 @@ import { Pagination } from '@/components/Pagination';
 import { categoryEmoji } from '@/lib/categories';
 import { categoryUrl, safePage } from '@/lib/url';
 import { interpolate, isSupportedLocale, t } from '@/i18n/locales';
+import { buildRecipeItemListJsonLd } from '@/lib/structured-data';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -72,8 +73,11 @@ export default async function CategoryPage({ params, searchParams }: { params: P
     if (!exists) notFound();
   }
 
+  const itemListJsonLd = buildRecipeItemListJsonLd(locale, recipes, page, PAGE_SIZE);
+
   return (
     <div className="container pt-8 sm:pt-12">
+      {itemListJsonLd ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} /> : null}
       <Link href={`/${locale}/categories`} className="btn-soft mb-6"><ArrowLeft size={16} /> {t(locale, 'categories')}</Link>
       <section className="max-w-3xl">
         <span className="badge"><span aria-hidden>{categoryEmoji(name)}</span> {t(locale, 'recipesInCategory')}</span>
