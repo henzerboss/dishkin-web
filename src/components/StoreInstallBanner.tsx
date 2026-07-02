@@ -60,7 +60,7 @@ export function StoreInstallBanner({ locale }: Props) {
           {button}
         </a>
 
-        <button className="rounded-full p-2 text-[var(--muted)]" onClick={dismiss} aria-label="Close">
+        <button className="rounded-full p-2 text-[var(--muted)]" onClick={dismiss} aria-label={t(locale, 'close')}>
           <X size={18} />
         </button>
       </div>
