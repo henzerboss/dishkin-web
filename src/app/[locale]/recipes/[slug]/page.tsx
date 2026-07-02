@@ -82,8 +82,8 @@ export default async function RecipePage({ params }: { params: Promise<{ locale:
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Link href={`/${locale}`} className="btn-soft mb-6"><ArrowLeft size={16} /> {t(locale, 'back')}</Link>
       <article className="grid gap-8 lg:grid-cols-[.92fr_1.08fr] lg:items-start">
-        <div className="card sticky top-24 overflow-hidden">
-          <div className="relative h-[340px] bg-gradient-to-br from-orange-100 to-emerald-50">
+        <div className="card overflow-hidden lg:sticky lg:top-24">
+          <div className="relative h-[260px] bg-gradient-to-br from-orange-100 to-emerald-50 sm:h-[340px]">
             {recipe.photoUrl ? (
               <Image src={recipe.photoUrl} alt={recipe.title} fill priority sizes="(max-width: 980px) 100vw, 44vw" className="object-cover" unoptimized />
             ) : (

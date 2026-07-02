@@ -13,6 +13,18 @@ Multilingual public recipe website for Dishkin. Stack matches `evsi.store` style
 - API endpoint for the mobile app: `POST /api/v1/recipes/upsert`.
 - Uploaded photos are stored under `public/uploads/recipes/YYYY/MM/`.
 
+
+### Uploads on CloudPanel/nginx
+
+Recipe images are written to both `public/uploads/recipes` and `uploads/recipes`. This is intentional: Next.js can serve files from `public`, while CloudPanel/nginx may try to serve `/uploads/*` directly from the site root before proxying the request to Node.js.
+
+If older images were already written only to `public/uploads`, copy them once:
+
+```bash
+mkdir -p uploads
+cp -a public/uploads/. uploads/ 2>/dev/null || true
+```
+
 ## Environment variables
 
 Copy `.env.example` to `.env` and change every secret value:
@@ -44,7 +56,7 @@ Use the same `DISHKIN_SYNC_TOKEN` value on `evsi.store` and `dishkin.com`. Do no
 
 ```bash
 npm ci
-mkdir -p data public/uploads/recipes
+mkdir -p data public/uploads/recipes uploads/recipes
 npx prisma generate
 npx prisma migrate dev
 npm run dev
@@ -80,7 +92,7 @@ git push -u origin main
 
 ```bash
 npm ci
-mkdir -p data public/uploads/recipes
+mkdir -p data public/uploads/recipes uploads/recipes
 npx prisma generate
 npx prisma migrate deploy
 npm run build

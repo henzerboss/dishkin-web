@@ -14,8 +14,14 @@ export function SearchFilters({ locale, q, sort, action, hidden = {} }: Props) {
     <section className="glass mt-8 rounded-[32px] p-4 sm:p-5">
       <form action={action ?? `/${locale}`} className="grid gap-3 md:grid-cols-[1fr_auto_auto]">
         <label className="relative block">
-          <Search className="pointer-events-none absolute start-4 top-1/2 -translate-y-1/2 text-[var(--muted)]" size={18} />
-          <input name="q" defaultValue={q} placeholder={t(locale, 'searchPlaceholder')} className="input ps-12" />
+          <Search className="pointer-events-none absolute top-1/2 -translate-y-1/2 text-[var(--muted)]" style={{ insetInlineStart: 18 }} size={18} />
+          <input
+            name="q"
+            defaultValue={q}
+            placeholder={t(locale, 'searchPlaceholder')}
+            className="input"
+            style={{ paddingInlineStart: 52 }}
+          />
         </label>
         {Object.entries(hidden).map(([key, value]) => value ? <input key={key} type="hidden" name={key} value={value} /> : null)}
         <select name="sort" defaultValue={sort} className="input min-w-40">
