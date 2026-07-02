@@ -36,7 +36,7 @@ export function RecipeCard({ recipe, locale }: Props) {
         <Link href={recipeUrl(locale, recipe.id)}>
           <h2 className="line-clamp-2 text-xl font-black tracking-tight">{recipe.title}</h2>
         </Link>
-        {recipe.description ? <p className="mt-2 line-clamp-2 text-sm leading-6 text-[var(--muted)]">{recipe.description}</p> : null}
+        {recipe.description ? <p className="mt-2 line-clamp-3 text-sm leading-6 text-[var(--muted)]">{recipe.description}</p> : null}
         <div className="mt-4 flex flex-wrap gap-3 text-sm text-[var(--muted)]">
           <span className="inline-flex items-center gap-1"><Clock size={15} /> {recipe.timeMinutes} {t(locale, 'min')}</span>
           {recipe.rating ? <span className="inline-flex items-center gap-1"><Star size={15} fill="currentColor" /> {recipe.rating}/5</span> : null}

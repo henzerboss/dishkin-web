@@ -99,3 +99,26 @@ button, input, select { font: inherit; }
   .btn-primary { padding: 11px 14px; }
   .btn-soft { padding: 9px 12px; }
 }
+.store-button {
+  display: inline-flex;
+  min-width: 168px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 18px;
+  background: #21160f;
+  color: #fff;
+  padding: 12px 16px;
+  box-shadow: 0 16px 32px rgba(33, 22, 15, 0.18);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.store-button:hover { transform: translateY(-1px); box-shadow: 0 18px 42px rgba(33, 22, 15, 0.24); }
+.store-button span { display: grid; gap: 1px; line-height: 1.05; text-align: start; }
+.store-button small { color: rgba(255,255,255,.72); font-size: 11px; font-weight: 700; }
+.store-button b { color: #fff; font-size: 15px; font-weight: 900; }
+.store-button-compact { min-width: 0; padding: 10px 14px; }
+@media (max-width: 640px) {
+  .store-button { width: 100%; }
+  .container { width: min(100% - 28px, 1180px); }
+  .input { font-size: 16px; }
+}

@@ -6,6 +6,7 @@ import prisma from '@/lib/prisma';
 import { SITE_URL } from '@/lib/config';
 import { RecipeCard } from '@/components/RecipeCard';
 import { SearchFilters } from '@/components/SearchFilters';
+import { AppStoreButtons } from '@/components/AppStoreButtons';
 import { Pagination } from '@/components/Pagination';
 import { categoryEmoji } from '@/lib/categories';
 import { categoryUrl } from '@/lib/url';
@@ -19,7 +20,7 @@ const PAGE_SIZE = 20;
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const title = `${t(locale, 'homeTitle')} | Dishkin`;
-  const description = t(locale, 'siteDescription');
+  const description = t(locale, 'homeSubtitle');
   return {
     title,
     description,
@@ -67,13 +68,14 @@ export default async function HomePage({ params, searchParams }: { params: Promi
           <span className="badge"><Sparkles size={15} /> Dishkin AI</span>
           <h1 className="mt-5 max-w-3xl text-4xl font-black tracking-tight sm:text-6xl">{t(locale, 'homeTitle')}</h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--muted)]">{t(locale, 'homeSubtitle')}</p>
+          <div className="mt-7"><AppStoreButtons locale={locale} /></div>
           <div className="mt-7 flex flex-wrap gap-3 text-sm font-bold text-[var(--muted)]">
             <span className="btn-soft">{total} {t(locale, 'recipesCount')}</span>
             <Link className="btn-soft" href={`/${locale}/categories`}><Tags size={16} /> {t(locale, 'categories')}: {categories.length}</Link>
           </div>
         </div>
-        <div className="relative overflow-hidden rounded-[38px] p-0">
-          <Image src="/brand/splash-icon.png" width={360} height={360} alt="Dishkin" className="relative mx-auto drop-shadow-2xl" priority unoptimized />
+        <div className="relative flex justify-center lg:justify-end">
+          <Image src="/brand/icon.png" width={360} height={360} alt="Dishkin" className="relative h-auto w-full max-w-[360px] rounded-[38px] drop-shadow-2xl" priority unoptimized />
         </div>
       </section>
 

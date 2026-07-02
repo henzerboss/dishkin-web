@@ -8,8 +8,8 @@ const inter = Inter({ subsets: ['latin', 'cyrillic'], variable: '--font-inter' }
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: 'Dishkin Recipes',
-  description: 'AI recipes from Dishkin users with photos, categories, ratings and cooking steps.',
+  title: 'AI Recipe Generator App | Dishkin',
+  description: 'Create recipes from what is in your fridge, keep your cookbook and make shopping lists.',
   icons: [{ rel: 'icon', url: '/brand/icon.png' }],
 };
 
