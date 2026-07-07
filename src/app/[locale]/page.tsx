@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title,
     description,
     alternates: { canonical: `${SITE_URL}/${locale}` },
-    openGraph: { title, description, url: `${SITE_URL}/${locale}`, siteName: 'Dishkin', images: ['/brand/icon-512.png'] },
+    openGraph: { title, description, url: `${SITE_URL}/${locale}`, siteName: 'Dishkin', images: ['/brand/icon.png'] },
   };
 }
 
@@ -78,7 +78,7 @@ export default async function HomePage({ params, searchParams }: { params: Promi
           </div>
         </div>
         <div className="relative flex justify-center lg:justify-end">
-          <Image src="/brand/icon-512.webp" width={512} height={512} alt="" aria-hidden="true" sizes="(max-width: 640px) 260px, 360px" className="relative h-auto w-full max-w-[360px] rounded-[38px] drop-shadow-2xl" priority />
+          <Image src="/brand/hero-512.webp" width={512} height={512} alt="Dishkin mascot" className="relative h-auto w-full max-w-[360px] rounded-[38px] drop-shadow-2xl" priority unoptimized />
         </div>
       </section>
 

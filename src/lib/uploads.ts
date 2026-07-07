@@ -1,6 +1,5 @@
 import { mkdir, unlink, writeFile } from 'fs/promises';
 import path from 'path';
-import sharp from 'sharp';
 import { MAX_IMAGE_BYTES } from './config';
 
 const PUBLIC_UPLOAD_ROOT = path.join(process.cwd(), 'public', 'uploads', 'recipes');
@@ -13,31 +12,24 @@ function uploadRoots() {
   return [...new Set(roots)];
 }
 
-async function optimizeRecipeImage(buffer: Buffer): Promise<Buffer> {
-  return sharp(buffer, { failOn: 'none' })
-    .rotate()
-    .resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true })
-    .webp({ quality: 82, effort: 4 })
-    .toBuffer();
+function extFromMime(mime?: string): 'jpg' | 'png' | 'webp' {
+  if (mime === 'image/png') return 'png';
+  if (mime === 'image/webp') return 'webp';
+  return 'jpg';
 }
 
-export async function saveRecipeImage(recipeId: string, base64: string, _mime?: string): Promise<string> {
+export async function saveRecipeImage(recipeId: string, base64: string, mime?: string): Promise<string> {
   const clean = base64.replace(/^data:image\/\w+;base64,/, '').trim();
-  const sourceBuffer = Buffer.from(clean, 'base64');
-  if (!sourceBuffer.length || sourceBuffer.length > MAX_IMAGE_BYTES) {
-    throw new Error('invalid_image_size');
-  }
-
-  const buffer = await optimizeRecipeImage(sourceBuffer);
+  const buffer = Buffer.from(clean, 'base64');
   if (!buffer.length || buffer.length > MAX_IMAGE_BYTES) {
     throw new Error('invalid_image_size');
   }
-
   const now = new Date();
   const year = String(now.getUTCFullYear());
   const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+  const ext = extFromMime(mime);
   const safeId = recipeId.replace(/[^a-zA-Z0-9_-]/g, '');
-  const filename = `${safeId}-${Date.now()}.webp`;
+  const filename = `${safeId}-${Date.now()}.${ext}`;
   const publicPath = `/uploads/recipes/${year}/${month}/${filename}`;
 
   // Write to both locations:

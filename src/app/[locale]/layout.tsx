@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { StoreInstallBanner } from '@/components/StoreInstallBanner';
-import { isRtl, isSupportedLocale } from '@/i18n/locales';
+import { isSupportedLocale } from '@/i18n/locales';
 
 export function generateStaticParams() {
   return [];
@@ -19,7 +19,7 @@ export default async function LocaleLayout({
   if (!isSupportedLocale(locale)) notFound();
 
   return (
-    <div dir={isRtl(locale) ? 'rtl' : 'ltr'}>
+    <div>
       <StoreInstallBanner locale={locale} />
       <Header locale={locale} />
       <main>{children}</main>

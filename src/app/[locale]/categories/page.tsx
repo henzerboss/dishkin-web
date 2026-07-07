@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title,
     description,
     alternates: { canonical: `${SITE_URL}/${locale}/categories` },
-    openGraph: { title, description, url: `${SITE_URL}/${locale}/categories`, siteName: 'Dishkin', images: ['/brand/icon-512.png'] },
+    openGraph: { title, description, url: `${SITE_URL}/${locale}/categories`, siteName: 'Dishkin', images: ['/brand/icon.png'] },
   };
 }
 

@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       description,
       url,
       type: 'article',
-      images: recipe.photoUrl ? [recipe.photoUrl] : ['/brand/icon-512.png'],
+      images: recipe.photoUrl ? [recipe.photoUrl] : ['/brand/icon.png'],
     },
   };
 }

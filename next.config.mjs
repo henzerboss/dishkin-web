@@ -3,11 +3,17 @@ import 'dotenv/config';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 31536000,
+    // Recipe photos are optimized on the fly (WebP + correct sizes).
+    // Pre-sized brand assets opt out via the `unoptimized` prop on <Image>.
+    localPatterns: [
+      { pathname: '/uploads/recipes/**' },
+      { pathname: '/brand/**' },
+    ],
+    minimumCacheTTL: 2678400, // 31 days
   },
   experimental: {
     optimizePackageImports: ['lucide-react'],
+    inlineCss: true,
   },
   async headers() {
     return [

@@ -12,7 +12,6 @@
     "prisma:dev": "prisma migrate dev"
   },
   "dependencies": {
-    "@next/third-parties": "^15.4.4",
     "@prisma/client": "^6.12.0",
     "bcryptjs": "^3.0.2",
     "clsx": "^2.1.1",
@@ -22,7 +21,6 @@
     "next-auth": "^5.0.0-beta.29",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
-    "sharp": "^0.35.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -43,11 +41,9 @@
     "npm": "10.x"
   },
   "browserslist": [
-    "Chrome >= 111",
-    "Edge >= 111",
-    "Firefox >= 111",
-    "Safari >= 16.4",
-    "iOS >= 16.4",
-    "Android >= 111"
+    "chrome >= 111",
+    "edge >= 111",
+    "firefox >= 111",
+    "safari >= 16.4"
   ]
 }
