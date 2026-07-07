@@ -122,3 +122,12 @@ button, input, select { font: inherit; }
   .container { width: min(100% - 28px, 1180px); }
   .input { font-size: 16px; }
 }
+
+p a:not(.btn-primary):not(.btn-soft):not(.store-button),
+li a:not(.btn-primary):not(.btn-soft):not(.store-button) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1.5px;
+}
+
+summary::-webkit-details-marker { display: none; }

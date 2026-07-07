@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title,
     description,
     alternates: { canonical: `${SITE_URL}${categoryUrl(locale, name)}` },
-    openGraph: { title, description, url: `${SITE_URL}${categoryUrl(locale, name)}`, siteName: 'Dishkin', images: ['/brand/icon.png'] },
+    openGraph: { title, description, url: `${SITE_URL}${categoryUrl(locale, name)}`, siteName: 'Dishkin', images: ['/brand/icon-512.png'] },
   };
 }
 

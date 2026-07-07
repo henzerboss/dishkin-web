@@ -41,7 +41,7 @@ export function buildRecipeJsonLd(recipe: RecipeWithCategories, locale: string) 
     publisher: {
       '@type': 'Organization',
       name: 'Dishkin',
-      logo: cleanObject({ '@type': 'ImageObject', url: absoluteSiteUrl('/brand/icon.png') }),
+      logo: cleanObject({ '@type': 'ImageObject', url: absoluteSiteUrl('/brand/icon-512.png') }),
     },
     inLanguage: locale,
     datePublished: (recipe.appCreatedAt ?? recipe.createdAt).toISOString(),

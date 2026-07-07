@@ -3,7 +3,8 @@ import 'dotenv/config';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    unoptimized: true,
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 31536000,
   },
   experimental: {
     optimizePackageImports: ['lucide-react'],

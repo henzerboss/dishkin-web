@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       description,
       url,
       type: 'article',
-      images: recipe.photoUrl ? [recipe.photoUrl] : ['/brand/icon.png'],
+      images: recipe.photoUrl ? [recipe.photoUrl] : ['/brand/icon-512.png'],
     },
   };
 }
@@ -77,7 +77,7 @@ export default async function RecipePage({ params }: { params: Promise<{ locale:
         <div className="card overflow-hidden lg:sticky lg:top-24">
           <div className="relative h-[260px] bg-gradient-to-br from-orange-100 to-emerald-50 sm:h-[340px]">
             {recipe.photoUrl ? (
-              <Image src={recipe.photoUrl} alt={recipe.title} fill priority sizes="(max-width: 980px) 100vw, 44vw" className="object-cover" unoptimized />
+              <Image src={recipe.photoUrl} alt={recipe.title} fill priority sizes="(max-width: 980px) 100vw, 44vw" className="object-cover" />
             ) : (
               <div className="flex h-full items-center justify-center text-[var(--primary)]"><ChefHat size={72} /></div>
             )}

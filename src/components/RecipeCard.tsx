@@ -20,7 +20,7 @@ export function RecipeCard({ recipe, locale }: Props) {
       <Link href={recipeUrl(locale, recipe.id)} className="block">
         <div className="relative h-52 bg-gradient-to-br from-orange-100 to-emerald-50">
           {recipe.photoUrl ? (
-            <Image src={recipe.photoUrl} alt={recipe.title} fill sizes="(max-width: 640px) 100vw, (max-width: 980px) 50vw, 33vw" className="object-cover transition duration-500 group-hover:scale-105" unoptimized />
+            <Image src={recipe.photoUrl} alt={recipe.title} fill sizes="(max-width: 640px) 100vw, (max-width: 980px) 50vw, 33vw" className="object-cover transition duration-500 group-hover:scale-105" />
           ) : (
             <div className="flex h-full items-center justify-center text-[var(--primary)]"><ChefHat size={54} /></div>
           )}

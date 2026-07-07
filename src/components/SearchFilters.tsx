@@ -16,15 +16,17 @@ export function SearchFilters({ locale, q, sort, action, hidden = {} }: Props) {
         <label className="relative block">
           <Search className="pointer-events-none absolute top-1/2 -translate-y-1/2 text-[var(--muted)]" style={{ insetInlineStart: 18 }} size={18} />
           <input
+            type="search"
             name="q"
             defaultValue={q}
             placeholder={t(locale, 'searchPlaceholder')}
+            aria-label={t(locale, 'searchPlaceholder')}
             className="input"
             style={{ paddingInlineStart: 52 }}
           />
         </label>
         {Object.entries(hidden).map(([key, value]) => value ? <input key={key} type="hidden" name={key} value={value} /> : null)}
-        <select name="sort" defaultValue={sort} className="input min-w-40">
+        <select name="sort" defaultValue={sort} className="input min-w-40" aria-label={`${t(locale, 'recent')} / ${t(locale, 'topRated')}`}>
           <option value="recent">{t(locale, 'recent')}</option>
           <option value="top">{t(locale, 'topRated')}</option>
         </select>
