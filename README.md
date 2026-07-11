@@ -9,7 +9,7 @@ Multilingual public recipe website for Dishkin. Stack matches `evsi.store` style
 - Search, category filters, top/recent sorting.
 - SEO: canonical metadata, Open Graph, `Recipe` JSON-LD, `robots.txt`, dynamic `sitemap.xml`, optimized images.
 - Android/iOS install banner with Google Play/App Store links.
-- Protected `/admin` page with permanent recipe deletion from the website only.
+- Protected `/admin` pages for recipe editing, deletion and sequential bulk AI generation.
 - API endpoint for the mobile app: `POST /api/v1/recipes/upsert`.
 - Uploaded photos are stored under `public/uploads/recipes/YYYY/MM/`.
 
@@ -39,11 +39,13 @@ Important variables:
 
 ```env
 NEXT_PUBLIC_SITE_URL=https://dishkin.com
-DATABASE_URL="file:./data/dishkin.db"
+DATABASE_URL="file:./data/dishkin.db" # actual file: prisma/data/dishkin.db
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=change-this-password
 AUTH_SECRET=long-random-secret
 DISHKIN_SYNC_TOKEN=long-random-token
+DISHKIN_AI_BASE_URL=https://evsi.store
+DISHKIN_AI_CLIENT_TOKEN=   # optional; only if COOKLY_CLIENT_TOKEN is enabled on evsi.store
 NEXT_PUBLIC_APP_STORE_URL=https://apps.apple.com/app/id6784972752
 NEXT_PUBLIC_GOOGLE_PLAY_URL=https://play.google.com/store/apps/details?id=store.evsi.recipesgenerator
 ```
@@ -56,7 +58,7 @@ Use the same `DISHKIN_SYNC_TOKEN` value on `evsi.store` and `dishkin.com`. Do no
 
 ```bash
 npm ci
-mkdir -p data public/uploads/recipes uploads/recipes
+mkdir -p prisma/data public/uploads/recipes uploads/recipes
 npx prisma generate
 npx prisma migrate dev
 npm run dev
@@ -92,7 +94,7 @@ git push -u origin main
 
 ```bash
 npm ci
-mkdir -p data public/uploads/recipes uploads/recipes
+mkdir -p prisma/data public/uploads/recipes uploads/recipes
 npx prisma generate
 npx prisma migrate deploy
 npm run build
@@ -129,7 +131,7 @@ The mobile app calls the safe proxy on `evsi.store`:
 
 ```http
 POST https://evsi.store/api/dishkin/recipes/sync
-X-Client-Token: <COOKLY_CLIENT_TOKEN>
+X-Client-Token: <optional token, only when protection is enabled>
 Content-Type: application/json
 ```
 
@@ -228,6 +230,19 @@ This archive removes server-side user-agent detection from `src/app/[locale]/lay
 - Individual recipe pages include a localized Dishkin app download block with App Store and Google Play buttons.
 - Individual recipe pages now show up to four similar recipes in a four-column desktop grid.
 
+## Bulk recipe generation
+
+The protected page `/admin/generate` accepts up to 300 non-empty dish-name lines and processes them sequentially. For each line the website calls the existing `evsi.store` Dishkin AI routes with the same generation parameters as the app: text method, empty ingredients, skipped ingredient step, four servings and no other selected preferences. Three recipes are saved to the website database; image generation is best effort and does not discard a recipe when an image request fails.
+
+The page requires these server-only variables on `dishkin.com`:
+
+```env
+DISHKIN_AI_BASE_URL=https://evsi.store
+DISHKIN_AI_CLIENT_TOKEN=   # optional
+```
+
+The token is used only on the server and is never included in browser JavaScript.
+
 ## Update notes v5
 
 - Visitors can rate an individual recipe from 1 to 5 stars. A long-lived anonymous browser cookie allows one website vote per recipe and no account is required.
@@ -236,3 +251,11 @@ This archive removes server-side user-agent detection from `src/app/[locale]/lay
 - `Recipe.rating` and `Recipe.ratingCount` are denormalized aggregate fields recalculated transactionally from app and website votes.
 - Existing one-vote app ratings are migrated into `RecipeVote`. Any older manually configured aggregate with more than one vote is preserved through legacy aggregate fields.
 - All voting UI strings and the previously added app-promo strings are present in all 32 website locales.
+
+
+## Update notes v6
+
+- Recipe voting now validates the public/proxied host instead of comparing the browser origin only with Next.js's internal `localhost` URL. This fixes false HTTP 403 responses behind CloudPanel/nginx.
+- `/admin/generate` provides sequential bulk generation for up to 300 dish names, live progress, automatic transient retries and safe stop behavior.
+- Each dish reproduces the requested app generation parameters and creates three recipes. Generated images are requested in parallel as a best-effort step.
+- Bulk requests are idempotent per row, so retrying a timed-out row updates the same three records instead of creating duplicates.

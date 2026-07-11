@@ -22,14 +22,36 @@ function clientIp(req: NextRequest) {
   return req.headers.get('cf-connecting-ip') || req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
 }
 
-function sameOrigin(req: NextRequest): boolean {
-  const origin = req.headers.get('origin');
-  if (!origin) return true;
+function normalizedHostname(value: string | null | undefined): string | null {
+  if (!value) return null;
   try {
-    return new URL(origin).host === new URL(req.url).host;
+    const candidate = value.includes('://') ? value : `https://${value}`;
+    return new URL(candidate).hostname.toLowerCase().replace(/^www\./, '');
   } catch {
-    return false;
+    return null;
   }
+}
+
+function sameOrigin(req: NextRequest): boolean {
+  // Browsers set this header themselves. Behind CloudPanel/nginx, req.url may contain
+  // an internal host such as localhost:3000, so it must not be the only comparison.
+  const fetchSite = req.headers.get('sec-fetch-site');
+  if (fetchSite === 'same-origin') return true;
+  if (fetchSite === 'cross-site') return false;
+
+  const origin = normalizedHostname(req.headers.get('origin'));
+  if (!origin) return true;
+
+  const allowedHosts = [
+    req.headers.get('x-forwarded-host'),
+    req.headers.get('host'),
+    process.env.NEXT_PUBLIC_SITE_URL,
+    req.url,
+  ]
+    .map(normalizedHostname)
+    .filter((host): host is string => Boolean(host));
+
+  return allowedHosts.includes(origin);
 }
 
 function parseRating(value: unknown): number | null {
