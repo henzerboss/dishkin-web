@@ -220,3 +220,19 @@ This archive removes server-side user-agent detection from `src/app/[locale]/lay
 - Recipe lists use 20 items per page with pagination.
 - Uploaded recipe images are rendered without the Next image optimizer to avoid `_next/image` 400 errors for locally uploaded files.
 - Admin links are hidden from the public header and footer; the admin panel remains available at `/admin`.
+
+## Update notes v4
+
+- The admin recipe list now has an edit action. The edit page supports recipe details, language, type, categories, ingredients, steps and nutrition. Rating is calculated automatically from individual votes.
+- Categories can be added, renamed or removed without a database migration.
+- Individual recipe pages include a localized Dishkin app download block with App Store and Google Play buttons.
+- Individual recipe pages now show up to four similar recipes in a four-column desktop grid.
+
+## Update notes v5
+
+- Visitors can rate an individual recipe from 1 to 5 stars. A long-lived anonymous browser cookie allows one website vote per recipe and no account is required.
+- Website votes are stored separately in `RecipeVote`; a unique database index prevents the same browser identifier from voting twice for the same recipe.
+- The optional rating sent by the Dishkin app is stored as the recipe's single `app-origin` vote. Repeated app sync updates that vote only and never replaces website votes.
+- `Recipe.rating` and `Recipe.ratingCount` are denormalized aggregate fields recalculated transactionally from app and website votes.
+- Existing one-vote app ratings are migrated into `RecipeVote`. Any older manually configured aggregate with more than one vote is preserved through legacy aggregate fields.
+- All voting UI strings and the previously added app-promo strings are present in all 32 website locales.

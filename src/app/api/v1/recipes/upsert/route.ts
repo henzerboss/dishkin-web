@@ -7,6 +7,7 @@ import { saveRecipeImage, deletePublicFile } from '@/lib/uploads';
 import { buildSearchText, slugify } from '@/lib/recipe';
 import { recipeUrl } from '@/lib/url';
 import { isSupportedLocale } from '@/i18n/locales';
+import { recalculateRecipeRating, setAppVote } from '@/lib/ratings';
 
 export const runtime = 'nodejs';
 
@@ -129,8 +130,8 @@ export async function POST(req: NextRequest) {
         ingredientsJson: JSON.stringify(incoming.ingredients),
         stepsJson: JSON.stringify(incoming.steps),
         nutritionJson: incoming.nutrition ? JSON.stringify(incoming.nutrition) : null,
-        rating: payload.rating || null,
-        ratingCount: payload.rating ? 1 : 0,
+        rating: null,
+        ratingCount: 0,
         photoUrl,
         appCreatedAt,
       },
@@ -148,7 +149,6 @@ export async function POST(req: NextRequest) {
         ingredientsJson: JSON.stringify(incoming.ingredients),
         stepsJson: JSON.stringify(incoming.steps),
         nutritionJson: incoming.nutrition ? JSON.stringify(incoming.nutrition) : null,
-        ...(payload.rating !== undefined && payload.rating !== null ? { rating: payload.rating || null, ratingCount: payload.rating ? 1 : 0 } : {}),
         ...(photoUrl ? { photoUrl } : {}),
         ...(appCreatedAt ? { appCreatedAt } : {}),
       },
@@ -159,7 +159,13 @@ export async function POST(req: NextRequest) {
         data: categories.map((name) => ({ recipeId: incoming.id, locale, name })),
       });
     }
-    return saved;
+
+    if (payload.rating !== undefined && payload.rating !== null) {
+      await setAppVote(tx, incoming.id, payload.rating);
+    }
+
+    const aggregate = await recalculateRecipeRating(tx, incoming.id);
+    return { ...saved, ...aggregate };
   });
 
   revalidatePath(`/${locale}`);

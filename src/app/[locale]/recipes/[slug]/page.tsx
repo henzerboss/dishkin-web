@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, ChefHat, Clock, Gauge, Star, Users } from 'lucide-react';
+import { cookies } from 'next/headers';
+import { ArrowLeft, ChefHat, Clock, Gauge, Sparkles, Star, Users } from 'lucide-react';
 import prisma from '@/lib/prisma';
 import { SITE_URL } from '@/lib/config';
 import { interpolate, isSupportedLocale, t } from '@/i18n/locales';
@@ -11,6 +12,9 @@ import { categoryUrl, recipeUrl } from '@/lib/url';
 import { RecipeCard } from '@/components/RecipeCard';
 import { findSimilarRecipes } from '@/lib/similar-recipes';
 import { buildRecipeJsonLd } from '@/lib/structured-data';
+import { AppStoreButtons } from '@/components/AppStoreButtons';
+import { RecipeRating } from '@/components/RecipeRating';
+import { findWebVote, formatRating, VOTER_COOKIE } from '@/lib/ratings';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -64,9 +68,11 @@ export default async function RecipePage({ params }: { params: Promise<{ locale:
   const steps = recipeSteps(recipe);
   const diff = difficultyKey(recipe.difficulty);
   const authenticity = interpolate(t(locale, 'authenticity'), { percent: recipe.authenticityPercent });
-  const [jsonLd, similarRecipes] = await Promise.all([
+  const cookieStore = await cookies();
+  const [jsonLd, similarRecipes, currentVote] = await Promise.all([
     Promise.resolve(buildRecipeJsonLd(recipe, locale)),
-    findSimilarRecipes(recipe, 3),
+    findSimilarRecipes(recipe, 4),
+    findWebVote(recipe.id, cookieStore.get(VOTER_COOKIE)?.value),
   ]);
 
   return (
@@ -86,7 +92,7 @@ export default async function RecipePage({ params }: { params: Promise<{ locale:
             <div className="rounded-2xl bg-[var(--surface)] p-3"><Clock size={17} /><b className="mt-2 block">{recipe.timeMinutes} {t(locale, 'min')}</b><span className="text-[var(--muted)]">{t(locale, 'time')}</span></div>
             <div className="rounded-2xl bg-[var(--surface)] p-3"><Gauge size={17} /><b className="mt-2 block">{t(locale, diff)}</b><span className="text-[var(--muted)]">{t(locale, 'difficulty')}</span></div>
             <div className="rounded-2xl bg-[var(--surface)] p-3"><Users size={17} /><b className="mt-2 block">{recipe.servings}</b><span className="text-[var(--muted)]">{t(locale, 'servings')}</span></div>
-            <div className="rounded-2xl bg-[var(--surface)] p-3"><Star size={17} fill="currentColor" /><b className="mt-2 block">{recipe.rating ? `${recipe.rating}/5` : '—'}</b><span className="text-[var(--muted)]">{t(locale, 'rating')}</span></div>
+            <div className="rounded-2xl bg-[var(--surface)] p-3"><Star size={17} fill="currentColor" /><b className="mt-2 block">{recipe.rating ? `${formatRating(recipe.rating, locale)}/5` : '—'}</b><span className="text-[var(--muted)]">{t(locale, 'rating')}</span></div>
           </div>
         </div>
 
@@ -97,6 +103,33 @@ export default async function RecipePage({ params }: { params: Promise<{ locale:
           <h1 className="text-4xl font-black tracking-tight sm:text-5xl">{recipe.title}</h1>
           <p className="mt-4 text-[var(--muted)]">{recipe.type === 'verified' ? t(locale, 'traditional') : authenticity}{recipe.cuisine ? ` · ${recipe.cuisine}` : ''}</p>
           {recipe.description ? <p className="mt-6 text-lg leading-8 text-[var(--muted)]">{recipe.description}</p> : null}
+
+          <RecipeRating
+            recipeId={recipe.id}
+            locale={locale}
+            initialRating={recipe.rating}
+            initialRatingCount={recipe.ratingCount}
+            initialUserRating={currentVote?.value ?? null}
+            title={t(locale, 'rateRecipeTitle')}
+            body={t(locale, 'rateRecipeBody')}
+            thanks={t(locale, 'ratingThanks')}
+            already={t(locale, 'ratingAlreadySubmitted')}
+            errorText={t(locale, 'ratingSubmitError')}
+            summaryTemplate={t(locale, 'ratingSummary')}
+            noVotes={t(locale, 'ratingNoVotes')}
+            ariaTemplate={t(locale, 'ratingAria')}
+          />
+
+          <aside className="mt-7 rounded-[24px] border border-orange-200 bg-gradient-to-br from-orange-50 to-emerald-50 p-5 sm:p-6">
+            <div className="flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-[var(--primary)] shadow-sm"><Sparkles size={20} /></span>
+              <div>
+                <h2 className="text-lg font-black">{t(locale, 'recipeAppPromoTitle')}</h2>
+                <p className="mt-1 text-sm leading-6 text-[var(--muted)]">{t(locale, 'recipeAppPromoBody')}</p>
+              </div>
+            </div>
+            <div className="mt-4"><AppStoreButtons locale={locale} compact /></div>
+          </aside>
 
           <section className="card mt-8 p-6">
             <h2 className="text-2xl font-black">{t(locale, 'ingredients')}</h2>
@@ -132,7 +165,7 @@ export default async function RecipePage({ params }: { params: Promise<{ locale:
               <p className="mt-1 text-sm text-[var(--muted)]">{t(locale, 'similarRecipesSubtitle')}</p>
             </div>
           </div>
-          <div className="recipe-grid">
+          <div className="recipe-grid recipe-grid-four">
             {similarRecipes.map((item) => <RecipeCard key={item.id} recipe={item} locale={locale} />)}
           </div>
         </section>

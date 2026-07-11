@@ -5,6 +5,7 @@ import type { Recipe, RecipeCategory } from '@prisma/client';
 import { t, interpolate } from '@/i18n/locales';
 import { recipeIngredients } from '@/lib/recipe';
 import { categoryUrl, recipeUrl } from '@/lib/url';
+import { formatRating } from '@/lib/ratings';
 
 interface Props {
   recipe: Recipe & { categories: RecipeCategory[] };
@@ -39,7 +40,7 @@ export function RecipeCard({ recipe, locale }: Props) {
         {recipe.description ? <p className="mt-2 line-clamp-3 text-sm leading-6 text-[var(--muted)]">{recipe.description}</p> : null}
         <div className="mt-4 flex flex-wrap gap-3 text-sm text-[var(--muted)]">
           <span className="inline-flex items-center gap-1"><Clock size={15} /> {recipe.timeMinutes} {t(locale, 'min')}</span>
-          {recipe.rating ? <span className="inline-flex items-center gap-1"><Star size={15} fill="currentColor" /> {recipe.rating}/5</span> : null}
+          {recipe.rating ? <span className="inline-flex items-center gap-1"><Star size={15} fill="currentColor" /> {formatRating(recipe.rating, locale)}/5</span> : null}
         </div>
         {ingredients.length ? (
           <p className="mt-4 line-clamp-1 text-sm text-[var(--muted)]">{ingredients.map((i) => i.name).join(' · ')}</p>

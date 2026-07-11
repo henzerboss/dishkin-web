@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { LogOut, Search } from 'lucide-react';
+import { LogOut, Pencil, Search } from 'lucide-react';
 import { auth } from '@/auth';
 import { logoutAction } from '@/actions/auth-actions';
 import { deleteRecipeAction } from '@/actions/admin-actions';
@@ -21,6 +21,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const q = String(sp.q ?? '').trim();
   const locale = String(sp.locale ?? '').trim();
   const page = safePage(sp.page);
+  const updated = String(sp.updated ?? '') === '1';
   const where = {
     ...(locale ? { locale } : {}),
     ...(q ? { OR: [
@@ -44,6 +45,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         </div>
         <form action={logoutAction}><button className="btn-soft" type="submit"><LogOut size={16} /> Logout</button></form>
       </div>
+
+      {updated ? <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 font-bold text-emerald-800">Рецепт сохранён.</div> : null}
 
       <form className="glass mb-6 grid gap-3 rounded-[28px] p-4 md:grid-cols-[1fr_auto_auto]">
         <label className="relative block">
@@ -74,10 +77,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               </div>
               <Link className="mt-3 inline-flex text-sm font-bold text-[var(--primary-dark)]" href={`/${r.locale}/recipes/${r.slug}`} target="_blank">Open recipe</Link>
             </div>
-            <form action={deleteRecipeAction}>
-              <input type="hidden" name="id" value={r.id} />
-              <ConfirmDeleteButton message="Delete this recipe forever from the website? The mobile app will not be affected." />
-            </form>
+            <div className="flex flex-row gap-2 sm:flex-col sm:items-stretch">
+              <Link className="btn-soft" href={`/admin/recipes/${encodeURIComponent(r.id)}/edit`}><Pencil size={16} /> Редактировать</Link>
+              <form action={deleteRecipeAction}>
+                <input type="hidden" name="id" value={r.id} />
+                <ConfirmDeleteButton message="Delete this recipe forever from the website? The mobile app will not be affected." />
+              </form>
+            </div>
           </div>
         ))}
         {!recipes.length ? <div className="card p-10 text-center text-[var(--muted)]">No recipes yet.</div> : null}

@@ -12,7 +12,7 @@ function unique(values: string[]): string[] {
   return Array.from(new Set(values.filter(Boolean)));
 }
 
-export async function findSimilarRecipes(recipe: RecipeWithCategories, limit = 3): Promise<RecipeWithCategories[]> {
+export async function findSimilarRecipes(recipe: RecipeWithCategories, limit = 4): Promise<RecipeWithCategories[]> {
   const categoryNames = unique(recipeCategories(recipe));
   const sourceIngredients = unique(recipeIngredients(recipe).map((i) => norm(i.name))).slice(0, 12);
   const cuisine = recipe.cuisine?.trim();

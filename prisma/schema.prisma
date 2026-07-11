@@ -23,14 +23,17 @@ model Recipe {
   ingredientsJson     String   @default("[]")
   stepsJson           String   @default("[]")
   nutritionJson       String?
-  rating              Int?
+  rating              Float?
   ratingCount         Int      @default(0)
+  legacyRatingSum     Float    @default(0)
+  legacyRatingCount   Int      @default(0)
   photoUrl            String?
   appCreatedAt        DateTime?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
   categories RecipeCategory[]
+  votes      RecipeVote[]
 
   @@index([locale, updatedAt])
   @@index([updatedAt])
@@ -48,4 +51,18 @@ model RecipeCategory {
 
   @@unique([recipeId, name])
   @@index([locale, name])
+}
+
+model RecipeVote {
+  id       String   @id @default(cuid())
+  recipeId String
+  value    Int
+  source   String
+  voterKey String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  recipe   Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, source, voterKey])
+  @@index([recipeId])
 }
