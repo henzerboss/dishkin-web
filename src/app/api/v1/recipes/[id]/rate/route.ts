@@ -7,11 +7,13 @@ import {
   findVote,
   insertWebVote,
   recalculateRecipeRating,
+  setAppVoterVote,
   validVoterId,
   voterKey,
   VOTER_COOKIE,
   WEB_VOTE_SOURCE,
 } from '@/lib/ratings';
+import { publicApiHeaders } from '@/lib/public-recipes';
 import { recipeUrl } from '@/lib/url';
 
 export const runtime = 'nodejs';
@@ -33,8 +35,6 @@ function normalizedHostname(value: string | null | undefined): string | null {
 }
 
 function sameOrigin(req: NextRequest): boolean {
-  // Browsers set this header themselves. Behind CloudPanel/nginx, req.url may contain
-  // an internal host such as localhost:3000, so it must not be the only comparison.
   const fetchSite = req.headers.get('sec-fetch-site');
   if (fetchSite === 'same-origin') return true;
   if (fetchSite === 'cross-site') return false;
@@ -54,28 +54,57 @@ function sameOrigin(req: NextRequest): boolean {
   return allowedHosts.includes(origin);
 }
 
-function parseRating(value: unknown): number | null {
+interface ParsedRating {
+  rating: number;
+  source: 'web' | 'app';
+  voterId?: string;
+}
+
+function parseRating(value: unknown): ParsedRating | null {
   if (!value || typeof value !== 'object') return null;
-  const rating = Number((value as { rating?: unknown }).rating);
-  return Number.isInteger(rating) && rating >= 1 && rating <= 5 ? rating : null;
+  const body = value as { rating?: unknown; source?: unknown; voterId?: unknown };
+  const rating = Number(body.rating);
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) return null;
+
+  if (body.source === 'app') {
+    const voterId = typeof body.voterId === 'string' ? body.voterId : undefined;
+    if (!validVoterId(voterId)) return null;
+    return { rating, source: 'app', voterId };
+  }
+  return { rating, source: 'web' };
+}
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: publicApiHeaders() });
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!sameOrigin(req)) {
-    return NextResponse.json({ error: 'forbidden_origin' }, { status: 403 });
+  let parsed: ParsedRating | null = null;
+  try {
+    parsed = parseRating(await req.json());
+  } catch {
+    parsed = null;
   }
-  if (!rateLimit(`recipe-rating:${clientIp(req)}`, 30, 60 * 60 * 1000)) {
-    return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+  if (!parsed) {
+    return NextResponse.json({ error: 'bad_request' }, { status: 400, headers: publicApiHeaders() });
   }
 
-  let rating: number | null = null;
-  try {
-    rating = parseRating(await req.json());
-  } catch {
-    rating = null;
-  }
-  if (rating === null) {
-    return NextResponse.json({ error: 'bad_request' }, { status: 400 });
+  const ip = clientIp(req);
+  if (parsed.source === 'web') {
+    if (!sameOrigin(req)) {
+      return NextResponse.json({ error: 'forbidden_origin' }, { status: 403 });
+    }
+    if (!rateLimit(`recipe-rating:web:${ip}`, 30, 60 * 60 * 1000)) {
+      return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+    }
+  } else {
+    const hashed = voterKey(parsed.voterId!);
+    if (
+      !rateLimit(`recipe-rating:app-ip:${ip}`, 120, 60 * 60 * 1000) ||
+      !rateLimit(`recipe-rating:app-voter:${hashed}`, 30, 60 * 60 * 1000)
+    ) {
+      return NextResponse.json({ error: 'rate_limited' }, { status: 429, headers: publicApiHeaders() });
+    }
   }
 
   const { id } = await params;
@@ -84,7 +113,29 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     select: { id: true, locale: true, slug: true, rating: true, ratingCount: true },
   });
   if (!recipe) {
-    return NextResponse.json({ error: 'not_found' }, { status: 404 });
+    return NextResponse.json({ error: 'not_found' }, { status: 404, headers: parsed.source === 'app' ? publicApiHeaders() : undefined });
+  }
+
+  if (parsed.source === 'app') {
+    const hashedVoterKey = voterKey(parsed.voterId!);
+    try {
+      const aggregate = await prisma.$transaction(async (tx) => {
+        await setAppVoterVote(tx, recipe.id, parsed!.rating, hashedVoterKey);
+        return recalculateRecipeRating(tx, recipe.id);
+      });
+      revalidatePath(`/${recipe.locale}`);
+      revalidatePath(recipeUrl(recipe.locale, recipe.id));
+      revalidatePath(`/${recipe.locale}/recipes/${recipe.slug}`);
+      return NextResponse.json({
+        ok: true,
+        rating: aggregate.rating,
+        ratingCount: aggregate.ratingCount,
+        userRating: parsed.rating,
+      }, { headers: publicApiHeaders() });
+    } catch (error) {
+      console.error('[recipe-rating:app] failed', error);
+      return NextResponse.json({ error: 'save_failed' }, { status: 500, headers: publicApiHeaders() });
+    }
   }
 
   const storedVoterId = req.cookies.get(VOTER_COOKIE)?.value;
@@ -93,7 +144,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   try {
     const aggregate = await prisma.$transaction(async (tx) => {
-      const inserted = await insertWebVote(tx, recipe.id, rating, hashedVoterKey);
+      const inserted = await insertWebVote(tx, recipe.id, parsed!.rating, hashedVoterKey);
       if (!inserted) throw new AlreadyVotedError();
       return recalculateRecipeRating(tx, recipe.id);
     });
@@ -106,7 +157,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       ok: true,
       rating: aggregate.rating,
       ratingCount: aggregate.ratingCount,
-      userRating: rating,
+      userRating: parsed.rating,
     });
     response.cookies.set(VOTER_COOKIE, rawVoterId, {
       httpOnly: true,
@@ -130,7 +181,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         userRating: existingVote?.value ?? null,
       }, { status: 409 });
     }
-    console.error('[recipe-rating] failed', error);
+    console.error('[recipe-rating:web] failed', error);
     return NextResponse.json({ error: 'save_failed' }, { status: 500 });
   }
 }

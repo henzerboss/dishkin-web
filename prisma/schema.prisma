@@ -38,6 +38,8 @@ model Recipe {
   @@index([locale, updatedAt])
   @@index([updatedAt])
   @@index([locale, rating])
+  @@index([locale, rating, ratingCount, updatedAt])
+  @@index([locale, title])
   @@index([locale, cuisine])
   @@index([locale, type])
 }

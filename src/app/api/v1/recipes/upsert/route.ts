@@ -7,7 +7,7 @@ import { saveRecipeImage, deletePublicFile } from '@/lib/uploads';
 import { buildSearchText, slugify } from '@/lib/recipe';
 import { recipeUrl } from '@/lib/url';
 import { isSupportedLocale } from '@/i18n/locales';
-import { recalculateRecipeRating, setAppVote } from '@/lib/ratings';
+import { recalculateRecipeRating, setAppVote, setAppVoterVote, validVoterId, voterKey } from '@/lib/ratings';
 
 export const runtime = 'nodejs';
 
@@ -51,6 +51,7 @@ const payloadSchema = z.object({
   locale: z.string().min(2).max(8),
   recipe: recipeSchema,
   rating: z.number().int().min(0).max(5).optional().nullable(),
+  voterId: z.string().min(20).max(120).regex(/^[a-zA-Z0-9-]+$/).optional().nullable(),
   photoBase64: z.string().max(4_000_000).optional().nullable(),
   photoMimeType: z.enum(['image/jpeg', 'image/png', 'image/webp']).optional().nullable(),
 });
@@ -161,7 +162,13 @@ export async function POST(req: NextRequest) {
     }
 
     if (payload.rating !== undefined && payload.rating !== null) {
-      await setAppVote(tx, incoming.id, payload.rating);
+      const rawVoterId = payload.voterId ?? undefined;
+      if (validVoterId(rawVoterId)) {
+        await setAppVoterVote(tx, incoming.id, payload.rating, voterKey(rawVoterId));
+      } else {
+        // Backward compatibility for already released builds that did not send an installation id.
+        await setAppVote(tx, incoming.id, payload.rating);
+      }
     }
 
     const aggregate = await recalculateRecipeRating(tx, incoming.id);
@@ -171,5 +178,5 @@ export async function POST(req: NextRequest) {
   revalidatePath(`/${locale}`);
   revalidatePath(recipeUrl(locale, recipe.id));
   revalidatePath(`/${locale}/recipes/${recipe.slug}`);
-  return NextResponse.json({ ok: true, slug: recipe.slug, url: recipeUrl(locale, recipe.id) });
+  return NextResponse.json({ ok: true, slug: recipe.slug, url: recipeUrl(locale, recipe.id), rating: recipe.rating, ratingCount: recipe.ratingCount, userRating: payload.rating ?? null });
 }

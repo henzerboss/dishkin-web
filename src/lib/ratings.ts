@@ -84,6 +84,32 @@ export async function insertWebVote(
   return inserted === 1;
 }
 
+export async function setAppVoterVote(
+  txInput: unknown,
+  recipeId: string,
+  rating: number,
+  hashedVoterKey: string,
+): Promise<void> {
+  const tx = rawDb(txInput);
+  if (rating > 0) {
+    await tx.$executeRaw`
+      INSERT INTO "RecipeVote" ("id", "recipeId", "value", "source", "voterKey", "createdAt", "updatedAt")
+      VALUES (${randomUUID()}, ${recipeId}, ${rating}, ${APP_VOTE_SOURCE}, ${hashedVoterKey}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      ON CONFLICT("recipeId", "source", "voterKey") DO UPDATE SET
+        "value" = excluded."value",
+        "updatedAt" = CURRENT_TIMESTAMP
+    `;
+    return;
+  }
+
+  await tx.$executeRaw`
+    DELETE FROM "RecipeVote"
+    WHERE "recipeId" = ${recipeId}
+      AND "source" = ${APP_VOTE_SOURCE}
+      AND "voterKey" = ${hashedVoterKey}
+  `;
+}
+
 export async function setAppVote(txInput: unknown, recipeId: string, rating: number): Promise<void> {
   const tx = rawDb(txInput);
   if (rating > 0) {
