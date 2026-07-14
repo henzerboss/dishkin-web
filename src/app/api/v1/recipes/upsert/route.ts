@@ -75,9 +75,9 @@ export async function POST(req: NextRequest) {
   if (req.headers.get('x-dishkin-sync-token') !== expectedToken) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
-  if (!rateLimit(clientIp(req))) {
-    return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
-  }
+  if (!rateLimit(`recipe-upsert:${clientIp(req)}`, 10_000, 60 * 60 * 1000)) {
+  return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+}
 
   let payload: z.infer<typeof payloadSchema>;
   try {
