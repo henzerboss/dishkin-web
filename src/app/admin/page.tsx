@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { DatabaseZap, LogOut, Pencil, Search } from 'lucide-react';
+import { DatabaseZap, LogOut, Pencil, Search, ShieldAlert } from 'lucide-react';
 import { auth } from '@/auth';
 import { logoutAction } from '@/actions/auth-actions';
 import { deleteRecipeAction } from '@/actions/admin-actions';
@@ -44,6 +44,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           <p className="mt-1 text-[var(--muted)]">{total} recipes found. Delete here removes the recipe only from the website.</p>
         </div>
         <div className="flex flex-wrap gap-3">
+          <Link className="btn-soft" href="/admin/cleanup-locales"><ShieldAlert size={16} /> Очистка языков</Link>
           <Link className="btn-primary" href="/admin/generate"><DatabaseZap size={16} /> Массовая генерация</Link>
           <form action={logoutAction}><button className="btn-soft" type="submit"><LogOut size={16} /> Logout</button></form>
         </div>

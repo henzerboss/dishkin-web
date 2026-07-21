@@ -8,6 +8,12 @@ import { deletePublicFile } from '@/lib/uploads';
 import { buildSearchText, type Nutrition, type RecipeIngredient, type RecipeStep } from '@/lib/recipe';
 import { categoryUrl, recipeUrl } from '@/lib/url';
 import { isSupportedLocale } from '@/i18n/locales';
+import {
+  cleanupWrongLocaleRecipes,
+  getWrongLocaleCleanupCutoff,
+  WRONG_LANGUAGE_CONFIRMATION,
+  WRONG_LANGUAGE_LOCALES,
+} from '@/lib/wrong-locale-cleanup';
 
 function text(formData: FormData, name: string, maxLength: number): string {
   return String(formData.get(name) ?? '').trim().slice(0, maxLength);
@@ -175,4 +181,39 @@ export async function deleteRecipeAction(formData: FormData) {
   revalidatePath(`/${recipe.locale}/recipes/${recipe.slug}`);
   revalidatePath(recipeUrl(recipe.locale, id));
   revalidatePath('/admin');
+}
+
+
+export async function cleanupWrongLocaleRecipesAction(formData: FormData) {
+  const session = await auth();
+  if (!session) redirect('/admin/login');
+
+  const confirmation = String(formData.get('confirmation') ?? '');
+  if (confirmation !== WRONG_LANGUAGE_CONFIRMATION) {
+    redirect('/admin/cleanup-locales?error=confirmation');
+  }
+
+  const cutoff = getWrongLocaleCleanupCutoff();
+  if (!cutoff) {
+    redirect('/admin/cleanup-locales?error=cutoff');
+  }
+
+  const result = await cleanupWrongLocaleRecipes(cutoff);
+
+  for (const locale of WRONG_LANGUAGE_LOCALES) {
+    revalidatePath(`/${locale}`);
+    revalidatePath(`/${locale}/categories`);
+  }
+  revalidatePath('/sitemap.xml');
+  revalidatePath('/admin');
+  revalidatePath('/admin/cleanup-locales');
+
+  const params = new URLSearchParams({
+    cleaned: '1',
+    recipes: String(result.deletedRecipes),
+    categories: String(result.deletedCategoryLinks),
+    votes: String(result.deletedVotes),
+    photos: String(result.deletedPhotos),
+  });
+  redirect(`/admin/cleanup-locales?${params.toString()}`);
 }

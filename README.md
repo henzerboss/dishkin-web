@@ -259,3 +259,28 @@ The token is used only on the server and is never included in browser JavaScript
 - `/admin/generate` provides sequential bulk generation for up to 300 dish names, live progress, automatic transient retries and safe stop behavior.
 - Each dish reproduces the requested app generation parameters and creates three recipes. Generated images are requested in parallel as a best-effort step.
 - Bulk requests are idempotent per row, so retrying a timed-out row updates the same three records instead of creating duplicates.
+
+
+## One-time cleanup for incorrectly generated bg/hr/vi/ms recipes
+
+The protected page `/admin/cleanup-locales` and the command-line maintenance script remove only recipes whose exact locale is `bg`, `hr`, `vi`, or `ms`, and whose `createdAt` is not later than `DISHKIN_BAD_LOCALE_CLEANUP_BEFORE`. Related `RecipeCategory` and `RecipeVote` rows are removed through the recipe foreign keys with `ON DELETE CASCADE`; identically named English categories are separate rows and are not selected.
+
+Set the cutoff after deploying the AI language fix, then run cleanup before generating any new recipes in these locales. Bulk upsert can preserve an old `createdAt`, so the order matters:
+
+```env
+DISHKIN_BAD_LOCALE_CLEANUP_BEFORE=2026-07-21T09:00:00Z
+```
+
+Preview from SSH without changing data:
+
+```bash
+npm run cleanup:wrong-locales -- --before=2026-07-21T09:00:00Z
+```
+
+Execute only after checking the preview and backing up `prisma/data/dishkin.db`:
+
+```bash
+npm run cleanup:wrong-locales -- --before=2026-07-21T09:00:00Z --execute --confirm=DELETE-bg-hr-vi-ms
+```
+
+After cleanup, remove `DISHKIN_BAD_LOCALE_CLEANUP_BEFORE` from `.env` and restart the app to disable the admin cleanup action.
