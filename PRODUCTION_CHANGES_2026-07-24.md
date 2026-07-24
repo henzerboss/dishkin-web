@@ -46,3 +46,11 @@ curl -s http://127.0.0.1:3000/sitemap.xml | head -30
 ```
 
 `npm run build` already runs `prisma generate`. A Prisma migration is not needed for this update.
+
+## Social sharing icon update
+
+- Replaced text-only social network buttons with compact branded SVG icons.
+- Added icons for Telegram, WhatsApp, Facebook, X, Reddit and Pinterest.
+- Kept visible text on the native Share and Copy Link actions.
+- Added accessible labels, native browser tooltips and keyboard focus styles.
+- No new npm dependency was added.

@@ -128,3 +128,27 @@ button, input, select { font: inherit; }
 @media (max-width: 640px) { .recipe-grid-four { grid-template-columns: 1fr; } }
 button:disabled { cursor: not-allowed; opacity: .45; }
 textarea { font: inherit; }
+
+/* Compact branded social-share buttons. */
+.share-brand-button {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  padding: 0;
+  flex: 0 0 42px;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.share-brand-button:hover {
+  transform: translateY(-1px);
+  border-color: currentColor;
+  box-shadow: 0 10px 24px rgba(83, 42, 12, 0.12);
+}
+.share-brand-button:focus-visible {
+  outline: 3px solid rgba(255, 107, 53, 0.28);
+  outline-offset: 2px;
+}
+.share-brand-icon {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
