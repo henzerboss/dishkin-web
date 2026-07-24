@@ -9,7 +9,7 @@ import { SearchFilters } from '@/components/SearchFilters';
 import { AppStoreButtons } from '@/components/AppStoreButtons';
 import { Pagination } from '@/components/Pagination';
 import { categoryEmoji } from '@/lib/categories';
-import { categoryUrl } from '@/lib/url';
+import { categoryUrl, pageUrl } from '@/lib/url';
 import { isSupportedLocale, t } from '@/i18n/locales';
 import { safePage } from '@/lib/url';
 import { buildRecipeItemListJsonLd } from '@/lib/structured-data';
@@ -18,15 +18,28 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 const PAGE_SIZE = 20;
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
   const { locale } = await params;
-  const title = `${t(locale, 'homeTitle')} | Dishkin`;
+  const sp = await searchParams;
+  const page = safePage(sp.page);
+  const hasSearchOrSort = sp.q !== undefined || sp.sort !== undefined;
+  const canonical = `${SITE_URL}${pageUrl(`/${locale}`, page)}`;
+  const baseTitle = `${t(locale, 'homeTitle')} | Dishkin`;
+  const title = page > 1 ? `${baseTitle} · ${page}` : baseTitle;
   const description = t(locale, 'homeSubtitle');
+
   return {
     title,
     description,
-    alternates: { canonical: `${SITE_URL}/${locale}` },
-    openGraph: { title, description, url: `${SITE_URL}/${locale}`, siteName: 'Dishkin', images: ['/brand/icon.png'] },
+    alternates: { canonical },
+    robots: hasSearchOrSort ? { index: false, follow: true } : { index: true, follow: true },
+    openGraph: { title, description, url: canonical, siteName: 'Dishkin', images: ['/brand/icon.png'] },
   };
 }
 
@@ -119,7 +132,7 @@ export default async function HomePage({ params, searchParams }: { params: Promi
             <div className="recipe-grid">
               {recipes.map((recipe) => <RecipeCard key={recipe.id} recipe={recipe} locale={locale} />)}
             </div>
-            <Pagination locale={locale} page={page} pageSize={PAGE_SIZE} total={total} basePath={`/${locale}`} params={{ q, sort }} />
+            <Pagination locale={locale} page={page} pageSize={PAGE_SIZE} total={total} basePath={`/${locale}`} params={{ q: q || undefined, sort: sort === 'top' ? sort : undefined }} />
           </>
         ) : (
           <div className="card flex flex-col items-center justify-center px-6 py-16 text-center">

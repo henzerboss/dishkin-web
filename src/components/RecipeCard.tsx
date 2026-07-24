@@ -1,14 +1,21 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ChefHat, Clock, Star } from 'lucide-react';
-import type { Recipe, RecipeCategory } from '@prisma/client';
+import type { RecipeCardData } from '@/lib/recipe-card';
 import { t, interpolate } from '@/i18n/locales';
 import { recipeIngredients } from '@/lib/recipe';
 import { categoryUrl, recipeUrl } from '@/lib/url';
-import { formatRating } from '@/lib/ratings';
+
+function formatRating(value: number, locale: string): string {
+  try {
+    return new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(value);
+  } catch {
+    return value.toFixed(1).replace(/\.0$/, '');
+  }
+}
 
 interface Props {
-  recipe: Recipe & { categories: RecipeCategory[] };
+  recipe: RecipeCardData;
   locale: string;
 }
 

@@ -30,15 +30,15 @@ export function safeJson<T>(raw: string | null | undefined, fallback: T): T {
   }
 }
 
-export function recipeIngredients(recipe: Recipe): RecipeIngredient[] {
+export function recipeIngredients(recipe: Pick<Recipe, 'ingredientsJson'>): RecipeIngredient[] {
   return safeJson<RecipeIngredient[]>(recipe.ingredientsJson, []);
 }
 
-export function recipeSteps(recipe: Recipe): RecipeStep[] {
+export function recipeSteps(recipe: Pick<Recipe, 'stepsJson'>): RecipeStep[] {
   return safeJson<RecipeStep[]>(recipe.stepsJson, []);
 }
 
-export function recipeNutrition(recipe: Recipe): Nutrition | null {
+export function recipeNutrition(recipe: Pick<Recipe, 'nutritionJson'>): Nutrition | null {
   return safeJson<Nutrition | null>(recipe.nutritionJson, null);
 }
 

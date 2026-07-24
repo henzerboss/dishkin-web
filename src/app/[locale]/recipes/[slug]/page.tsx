@@ -9,12 +9,14 @@ import { SITE_URL } from '@/lib/config';
 import { interpolate, isSupportedLocale, t } from '@/i18n/locales';
 import { difficultyKey, recipeIngredients, recipeSteps } from '@/lib/recipe';
 import { categoryUrl, recipeUrl } from '@/lib/url';
-import { RecipeCard } from '@/components/RecipeCard';
 import { findSimilarRecipes } from '@/lib/similar-recipes';
-import { buildRecipeJsonLd } from '@/lib/structured-data';
+import { absoluteSiteUrl, buildRecipeJsonLd } from '@/lib/structured-data';
 import { AppStoreButtons } from '@/components/AppStoreButtons';
 import { RecipeRating } from '@/components/RecipeRating';
 import { findWebVote, formatRating, VOTER_COOKIE } from '@/lib/ratings';
+import { RecipeShare } from '@/components/RecipeShare';
+import { LazySimilarRecipes } from '@/components/LazySimilarRecipes';
+import { toRecipeCardData } from '@/lib/recipe-card';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -53,6 +55,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       description,
       url,
       type: 'article',
+      siteName: 'Dishkin',
+      images: recipe.photoUrl ? [recipe.photoUrl] : ['/brand/icon.png'],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: recipe.title,
+      description,
       images: recipe.photoUrl ? [recipe.photoUrl] : ['/brand/icon.png'],
     },
   };
@@ -71,9 +80,14 @@ export default async function RecipePage({ params }: { params: Promise<{ locale:
   const cookieStore = await cookies();
   const [jsonLd, similarRecipes, currentVote] = await Promise.all([
     Promise.resolve(buildRecipeJsonLd(recipe, locale)),
-    findSimilarRecipes(recipe, 4),
+    findSimilarRecipes(recipe, 9),
     findWebVote(recipe.id, cookieStore.get(VOTER_COOKIE)?.value),
   ]);
+
+  const initialSimilarRecipes = similarRecipes.slice(0, 8).map(toRecipeCardData);
+  const hasMoreSimilarRecipes = similarRecipes.length > initialSimilarRecipes.length;
+  const shareUrl = `${SITE_URL}${recipeUrl(locale, recipe.id)}`;
+  const shareImageUrl = absoluteSiteUrl(recipe.photoUrl);
 
   return (
     <div className="container pt-8 sm:pt-12">
@@ -103,6 +117,15 @@ export default async function RecipePage({ params }: { params: Promise<{ locale:
           <h1 className="text-4xl font-black tracking-tight sm:text-5xl">{recipe.title}</h1>
           <p className="mt-4 text-[var(--muted)]">{recipe.type === 'verified' ? t(locale, 'traditional') : authenticity}{recipe.cuisine ? ` · ${recipe.cuisine}` : ''}</p>
           {recipe.description ? <p className="mt-6 text-lg leading-8 text-[var(--muted)]">{recipe.description}</p> : null}
+
+          <RecipeShare
+            title={recipe.title}
+            url={shareUrl}
+            imageUrl={shareImageUrl}
+            heading={t(locale, 'shareRecipe')}
+            copyLabel={t(locale, 'copyLink')}
+            copiedLabel={t(locale, 'linkCopied')}
+          />
 
           <RecipeRating
             recipeId={recipe.id}
@@ -157,7 +180,7 @@ export default async function RecipePage({ params }: { params: Promise<{ locale:
         </div>
       </article>
 
-      {similarRecipes.length ? (
+      {initialSimilarRecipes.length ? (
         <section className="mt-12 sm:mt-16">
           <div className="mb-5 flex items-end justify-between gap-4">
             <div>
@@ -165,9 +188,13 @@ export default async function RecipePage({ params }: { params: Promise<{ locale:
               <p className="mt-1 text-sm text-[var(--muted)]">{t(locale, 'similarRecipesSubtitle')}</p>
             </div>
           </div>
-          <div className="recipe-grid recipe-grid-four">
-            {similarRecipes.map((item) => <RecipeCard key={item.id} recipe={item} locale={locale} />)}
-          </div>
+          <LazySimilarRecipes
+            recipeId={recipe.id}
+            locale={locale}
+            initialItems={initialSimilarRecipes}
+            initialHasMore={hasMoreSimilarRecipes}
+            retryLabel={t(locale, 'retry')}
+          />
         </section>
       ) : null}
     </div>

@@ -8,7 +8,7 @@ import { RecipeCard } from '@/components/RecipeCard';
 import { SearchFilters } from '@/components/SearchFilters';
 import { Pagination } from '@/components/Pagination';
 import { categoryEmoji } from '@/lib/categories';
-import { categoryUrl, safePage } from '@/lib/url';
+import { categoryUrl, pageUrl, safePage } from '@/lib/url';
 import { interpolate, isSupportedLocale, t } from '@/i18n/locales';
 import { buildRecipeItemListJsonLd } from '@/lib/structured-data';
 
@@ -24,16 +24,29 @@ function decodeCategory(value: string) {
   }
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string; category: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string; category: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
   const { locale, category } = await params;
+  const sp = await searchParams;
   const name = decodeCategory(category);
-  const title = `${interpolate(t(locale, 'categoryPageTitle'), { category: name })} | Dishkin`;
+  const page = safePage(sp.page);
+  const hasSearchOrSort = sp.q !== undefined || sp.sort !== undefined;
+  const canonical = `${SITE_URL}${pageUrl(categoryUrl(locale, name), page)}`;
+  const baseTitle = `${interpolate(t(locale, 'categoryPageTitle'), { category: name })} | Dishkin`;
+  const title = page > 1 ? `${baseTitle} · ${page}` : baseTitle;
   const description = interpolate(t(locale, 'categoryPageSubtitle'), { category: name });
+
   return {
     title,
     description,
-    alternates: { canonical: `${SITE_URL}${categoryUrl(locale, name)}` },
-    openGraph: { title, description, url: `${SITE_URL}${categoryUrl(locale, name)}`, siteName: 'Dishkin', images: ['/brand/icon.png'] },
+    alternates: { canonical },
+    robots: hasSearchOrSort ? { index: false, follow: true } : { index: true, follow: true },
+    openGraph: { title, description, url: canonical, siteName: 'Dishkin', images: ['/brand/icon.png'] },
   };
 }
 
@@ -99,7 +112,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
             <div className="recipe-grid">
               {recipes.map((recipe) => <RecipeCard key={recipe.id} recipe={recipe} locale={locale} />)}
             </div>
-            <Pagination locale={locale} page={page} pageSize={PAGE_SIZE} total={total} basePath={categoryUrl(locale, name)} params={{ q, sort }} />
+            <Pagination locale={locale} page={page} pageSize={PAGE_SIZE} total={total} basePath={categoryUrl(locale, name)} params={{ q: q || undefined, sort: sort === 'top' ? sort : undefined }} />
           </>
         ) : (
           <div className="card flex flex-col items-center justify-center px-6 py-16 text-center">
