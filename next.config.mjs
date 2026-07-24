@@ -15,6 +15,15 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react'],
     inlineCss: true,
   },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        // Keep /sitemap.xml stable and force the new sitemap index even if a
+        // legacy src/app/sitemap.ts file remains after an overlay deployment.
+        { source: '/sitemap.xml', destination: '/sitemap-index.xml' },
+      ],
+    };
+  },
   async headers() {
     return [
       {

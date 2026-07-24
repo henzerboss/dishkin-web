@@ -118,31 +118,6 @@ export default async function RecipePage({ params }: { params: Promise<{ locale:
           <p className="mt-4 text-[var(--muted)]">{recipe.type === 'verified' ? t(locale, 'traditional') : authenticity}{recipe.cuisine ? ` · ${recipe.cuisine}` : ''}</p>
           {recipe.description ? <p className="mt-6 text-lg leading-8 text-[var(--muted)]">{recipe.description}</p> : null}
 
-          <RecipeShare
-            title={recipe.title}
-            url={shareUrl}
-            imageUrl={shareImageUrl}
-            heading={t(locale, 'shareRecipe')}
-            copyLabel={t(locale, 'copyLink')}
-            copiedLabel={t(locale, 'linkCopied')}
-          />
-
-          <RecipeRating
-            recipeId={recipe.id}
-            locale={locale}
-            initialRating={recipe.rating}
-            initialRatingCount={recipe.ratingCount}
-            initialUserRating={currentVote?.value ?? null}
-            title={t(locale, 'rateRecipeTitle')}
-            body={t(locale, 'rateRecipeBody')}
-            thanks={t(locale, 'ratingThanks')}
-            already={t(locale, 'ratingAlreadySubmitted')}
-            errorText={t(locale, 'ratingSubmitError')}
-            summaryTemplate={t(locale, 'ratingSummary')}
-            noVotes={t(locale, 'ratingNoVotes')}
-            ariaTemplate={t(locale, 'ratingAria')}
-          />
-
           <aside className="mt-7 rounded-[24px] border border-orange-200 bg-gradient-to-br from-orange-50 to-emerald-50 p-5 sm:p-6">
             <div className="flex items-start gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-[var(--primary)] shadow-sm"><Sparkles size={20} /></span>
@@ -177,6 +152,32 @@ export default async function RecipePage({ params }: { params: Promise<{ locale:
               ))}
             </ol>
           </section>
+
+          <RecipeRating
+            recipeId={recipe.id}
+            locale={locale}
+            initialRating={recipe.rating}
+            initialRatingCount={recipe.ratingCount}
+            initialUserRating={currentVote?.value ?? null}
+            title={t(locale, 'rateRecipeTitle')}
+            body={t(locale, 'rateRecipeBody')}
+            thanks={t(locale, 'ratingThanks')}
+            already={t(locale, 'ratingAlreadySubmitted')}
+            errorText={t(locale, 'ratingSubmitError')}
+            summaryTemplate={t(locale, 'ratingSummary')}
+            noVotes={t(locale, 'ratingNoVotes')}
+            ariaTemplate={t(locale, 'ratingAria')}
+          />
+
+          <RecipeShare
+            title={recipe.title}
+            url={shareUrl}
+            imageUrl={shareImageUrl}
+            heading={t(locale, 'shareRecipe')}
+            copyLabel={t(locale, 'copyLink')}
+            copiedLabel={t(locale, 'linkCopied')}
+          />
+
         </div>
       </article>
 

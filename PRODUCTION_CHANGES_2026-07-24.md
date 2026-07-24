@@ -54,3 +54,12 @@ curl -s http://127.0.0.1:3000/sitemap.xml | head -30
 - Kept visible text on the native Share and Copy Link actions.
 - Added accessible labels, native browser tooltips and keyboard focus styles.
 - No new npm dependency was added.
+
+## Follow-up: share placement and sitemap route hardening
+
+- Moved the full social sharing block below the cooking steps and rating, immediately before similar recipes.
+- The sharing block is now a separate card for clearer visual hierarchy.
+- Moved the physical sitemap-index route to `/sitemap-index.xml`.
+- Added a `beforeFiles` rewrite from `/sitemap.xml` to `/sitemap-index.xml`.
+  This deliberately overrides the legacy `src/app/sitemap.ts` metadata route if that stale file remains after an overlay deployment.
+- Excluded sitemap endpoints from locale middleware.

@@ -149,8 +149,8 @@ export function RecipeShare({ title, url, imageUrl, heading, copyLabel, copiedLa
   }
 
   return (
-    <section className="mt-7" aria-labelledby="recipe-share-heading">
-      <h2 id="recipe-share-heading" className="text-base font-black">{heading}</h2>
+    <section className="card mt-6 p-6" aria-labelledby="recipe-share-heading">
+      <h2 id="recipe-share-heading" className="text-xl font-black">{heading}</h2>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {canShare ? (
           <button type="button" className="btn-primary px-4 py-2 text-sm" onClick={shareNative}>
